@@ -28,6 +28,9 @@
     <inceptionYear>2016</inceptionYear>
 
     <properties>
+        <sonar.organization>jhonder18</sonar.organization>
+        <sonar.projectKey>jhonder18_thingsboard</sonar.projectKey>   <!-- útil si llamas mvn sonar localmente -->
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <main.dir>${basedir}</main.dir>
