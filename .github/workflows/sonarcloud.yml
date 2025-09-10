@@ -1,0 +1,65 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build-and-analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ------- Backend (Java/Maven) -------
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Build backend with tests
+        run: mvn -B -DskipITs=false clean verify
+
+      # ------- Frontend (Angular) -------
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install frontend deps
+        working-directory: ui-ngx
+        run: npm ci
+
+      - name: Run frontend tests with coverage
+        working-directory: ui-ngx
+        run: npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage
+
+      # ------- SonarCloud -------
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=jhonder18_thingsboard
+            -Dsonar.organization=jhonder18
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.javascript.lcov.reportPaths=ui-ngx/coverage/lcov.info
+            -Dsonar.coverage.jacoco.xmlReportPaths=$(git ls-files */target/site/jacoco/jacoco.xml | tr '\n' ',')
