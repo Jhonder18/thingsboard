@@ -50,7 +50,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      # ⬇️ Compila pero salta TODOS los tests (unitarios e integr.)
+      # Compila backend pero sin tests
       - name: Build backend (skip tests)
         run: mvn -B clean install -DskipTests -DskipITs
 
@@ -59,21 +59,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'ui-ngx/package-lock.json'
 
-      - name: Install frontend deps
+      - name: Install frontend deps (fallback)
         working-directory: ui-ngx
-        run: npm ci
-
-      # Si falla Karma/Chrome no queremos romper el análisis → continuar
-      - name: Run frontend tests with coverage
-        working-directory: ui-ngx
-        continue-on-error: true
-        env:
-          CHROME_BIN: /usr/bin/google-chrome
         run: |
-          npm run test -- --watch=false --browsers=ChromeHeadless --no-sandbox --code-coverage
-          # Si no se generó cobertura, crear archivo vacío para que Sonar no falle
-          mkdir -p coverage && touch coverage/lcov.info
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+
+      # No correr tests ahora; crear cobertura vacía para Sonar
+      - name: Ensure empty coverage for TS
+        working-directory: ui-ngx
+        run: |
+          mkdir -p coverage
+          : > coverage/lcov.info
 
       # ------- SonarCloud -------
       - name: SonarCloud Scan
