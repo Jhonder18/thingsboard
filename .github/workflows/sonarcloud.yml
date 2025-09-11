@@ -87,4 +87,5 @@ jobs:
             -Dsonar.organization=jhonder18
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.javascript.lcov.reportPaths=ui-ngx/coverage/lcov.info
-            -Dsonar.coverage.jacoco.xmlReportPaths=$(git ls-files */target/site/jacoco/jacoco.xml | tr '\n' ',')
+            -Dsonar.coverage.jacoco.xmlReportPaths=**/target/site/jacoco/jacoco.xml
+
