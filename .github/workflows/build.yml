@@ -34,7 +34,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # necesarios para blame/analysis
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -57,11 +57,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      # 🔸 Compila pero NO ejecuta tests (evita surefire failures en CI)
+      # Compila sin tests (evita fallos de Surefire)
       - name: Build (skip tests)
         run: mvn -B clean install -DskipTests -DskipITs
 
-      # 🔸 Ejecuta el análisis de SonarCloud con el plugin de Maven
       - name: Sonar analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -70,4 +69,6 @@ jobs:
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.organization=jhonder18
           -Dsonar.projectKey=jhonder18_thingsboard
-
+          -Dsonar.branch.name=master
+          -Dsonar.token=${SONAR_TOKEN}
+          -Dsonar.verbose=true
